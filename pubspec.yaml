@@ -1,0 +1,50 @@
+name: task_flow
+description: "Task Management System"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  flutter_bloc: ^9.1.1
+
+  # Routing
+  go_router: ^16.2.0
+
+  # Dependency Injection
+  get_it: ^8.2.0
+
+  # Networking
+  dio: ^5.9.0
+
+  # Connectivity
+  connectivity_plus: ^7.0.0
+
+  # Fonts
+  google_fonts: ^8.2.1
+
+  shared_preferences: ^2.3.0
+  equatable: ^2.0.5
+  dartz: ^0.10.1
+  motion_toast: ^2.11.0
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/

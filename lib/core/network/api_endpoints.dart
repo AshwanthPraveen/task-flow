@@ -15,4 +15,5 @@ class ApiEndpoints {
   const ApiEndpoints._();
 
   static const String login = '/auth/login';
+  static const String tasks = '/tasks';
 }

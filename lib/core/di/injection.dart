@@ -3,7 +3,9 @@
 // Created Date: 27-Sep-2026
 // Title: Injection
 // Description:
-//   Sets up dependency injection using GetIt.
+//   Sets up dependency injection using GetIt. Each feature has its own
+//   registration method; add new features by creating a _registerXxx method
+//   and calling it from setupDependencies.
 //
 // Class:
 //   Injection
@@ -22,22 +24,52 @@ import 'package:task_flow/features/auth/data/repositories/auth_repository_impl.d
 import 'package:task_flow/features/auth/domain/repositories/auth_repository.dart';
 import 'package:task_flow/features/auth/domain/usecases/login_usecase.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_bloc.dart';
+import 'package:task_flow/features/tasks_home/data/datasources/task_remote_data_source.dart';
+import 'package:task_flow/features/tasks_home/data/datasources/task_remote_data_source_impl.dart';
+import 'package:task_flow/features/tasks_home/data/repositories/task_repository_impl.dart';
+import 'package:task_flow/features/tasks_home/domain/repositories/task_repository.dart';
+import 'package:task_flow/features/tasks_home/domain/usecases/get_tasks_usecase.dart';
+import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
-  // Register repositories, use cases, blocs, and services here.
+  await _registerExternal();
+  _registerCore();
+  _registerAuth();
+  _registerTasksHome();
+}
 
-  // External
+// ---------------------------------------------------------------------------
+// External
+// ---------------------------------------------------------------------------
+Future<void> _registerExternal() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(prefs);
+}
 
-  // Core
+// ---------------------------------------------------------------------------
+// Core
+// ---------------------------------------------------------------------------
+void _registerCore() {
   getIt.registerLazySingleton<UserDetails>(
     () => UserDetails(getIt<SharedPreferences>()),
   );
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient());
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(
+      authHeaderProvider: () async {
+        final String? token =
+            getIt<UserDetails>().accessToken; // adjust to your API
+        return (token == null || token.isEmpty) ? null : 'Bearer $token';
+      },
+    ),
+  );
+}
 
+// ---------------------------------------------------------------------------
+// Feature: Auth
+// ---------------------------------------------------------------------------
+void _registerAuth() {
   // Data sources
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(getIt<ApiClient>()),
@@ -59,5 +91,30 @@ Future<void> setupDependencies() async {
       loginUseCase: getIt<LoginUseCase>(),
       userDetails: getIt<UserDetails>(),
     ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Feature: Tasks Home
+// ---------------------------------------------------------------------------
+void _registerTasksHome() {
+  // Data sources
+  getIt.registerLazySingleton<TaskRemoteDataSource>(
+    () => TaskRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<TaskRepository>(
+    () => TaskRepositoryImpl(remoteDataSource: getIt<TaskRemoteDataSource>()),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton<GetTasksUseCase>(
+    () => GetTasksUseCase(getIt<TaskRepository>()),
+  );
+
+  // Blocs
+  getIt.registerFactory<TasksBloc>(
+    () => TasksBloc(getTasksUseCase: getIt<GetTasksUseCase>()),
   );
 }

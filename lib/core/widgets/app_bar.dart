@@ -17,11 +17,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:task_flow/core/di/injection.dart';
+import 'package:task_flow/core/responsive/responsive.dart';
+import 'package:task_flow/core/router/app_router.dart';
 import 'package:task_flow/core/storage/user_details.dart';
 import 'package:task_flow/core/theme/app_colors.dart';
+import 'package:task_flow/core/theme/app_font_sizes.dart';
 import 'package:task_flow/core/theme/app_spacing.dart';
 import 'package:task_flow/core/theme/app_text_styles.dart';
 import 'package:task_flow/core/widgets/app_icon_button.dart';
+import 'package:task_flow/core/constants/app_strings.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_bloc.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_event.dart';
 
@@ -37,22 +41,69 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onBackPressed,
   });
 
+  static const double _dividerHeight = 0.5;
+
+  double _appBarHeight(BuildContext context) {
+    switch (Responsive.device(context)) {
+      case ResponsiveDevice.mobile:
+        return 56;
+
+      case ResponsiveDevice.tablet:
+        return 60;
+
+      case ResponsiveDevice.desktop:
+        return 64;
+
+      case ResponsiveDevice.ultraHd:
+        return 72;
+    }
+  }
+
   @override
   Size get preferredSize => const Size.fromHeight(64);
-  static const double _dividerHeight = 0.5;
 
   Future<void> _onLogout(BuildContext context) async {
     await getIt<UserDetails>().clear();
+
     if (!context.mounted) return;
+
     context.read<LoginBloc>().add(const LoginStatusReset());
-    context.go('/login');
+    context.go(AppRouter.login);
   }
 
   @override
   Widget build(BuildContext context) {
     final String userName = getIt<UserDetails>().userName ?? '';
 
+    final double appBarHeight = _appBarHeight(context);
+
+    final double titleSize;
+    final double userNameSize;
+
+    switch (Responsive.device(context)) {
+      case ResponsiveDevice.mobile:
+        titleSize = AppFontSizes.subtitleMobile;
+        userNameSize = AppFontSizes.captionMobile;
+        break;
+
+      case ResponsiveDevice.tablet:
+        titleSize = AppFontSizes.subtitleTablet;
+        userNameSize = AppFontSizes.captionTablet;
+        break;
+
+      case ResponsiveDevice.desktop:
+        titleSize = AppFontSizes.heading2;
+        userNameSize = AppFontSizes.bodySmall;
+        break;
+
+      case ResponsiveDevice.ultraHd:
+        titleSize = AppFontSizes.subtitleUltraHd;
+        userNameSize = AppFontSizes.bodyUltraHd;
+        break;
+    }
+
     return AppBar(
+      toolbarHeight: appBarHeight,
       bottom: const PreferredSize(
         preferredSize: Size.fromHeight(_dividerHeight),
         child: Divider(
@@ -70,10 +121,13 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? AppIconButton(
               onPressed: onBackPressed,
               icon: Icons.arrow_back_rounded,
-              tooltip: 'Back',
+              tooltip: AppStrings.back,
             )
           : null,
-      title: Text(title, style: AppTextStyles.heading2),
+      title: Text(
+        title,
+        style: AppTextStyles.heading2.copyWith(fontSize: titleSize),
+      ),
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.xs),
@@ -83,6 +137,7 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
+                fontSize: userNameSize,
               ),
             ),
           ),
@@ -90,7 +145,7 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
         AppIconButton(
           onPressed: () => _onLogout(context),
           icon: Icons.logout_rounded,
-          tooltip: 'Logout',
+          tooltip: AppStrings.logout,
         ),
         const SizedBox(width: AppSpacing.xs),
       ],

@@ -14,6 +14,7 @@
 class AppFontSizes {
   AppFontSizes._();
 
+  // ---- Existing sizes (used for desktop) ----
   static const double display = 56;
 
   static const double heading1 = 36;
@@ -28,4 +29,22 @@ class AppFontSizes {
 
   static const double label = 12;
   static const double caption = 11;
+
+  // ---- Mobile ----
+  static const double subtitleMobile = 16;
+  static const double bodyMobile = 13;
+  static const double labelMobile = 11;
+  static const double captionMobile = 10;
+
+  // ---- Tablet ----
+  static const double subtitleTablet = 17;
+  static const double bodyTablet = 14;
+  static const double labelTablet = 12;
+  static const double captionTablet = 11;
+
+  // ---- Ultra HD ----
+  static const double subtitleUltraHd = 20;
+  static const double bodyUltraHd = 16;
+  static const double labelUltraHd = 14;
+  static const double captionUltraHd = 13;
 }

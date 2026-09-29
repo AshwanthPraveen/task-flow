@@ -35,4 +35,5 @@ class AppColors {
   static const border = Color(0xFF1E293B);
   static const success = Color(0xFF22C55E);
   static const error = Color(0xFFEF4444);
+  static const warning = Color(0xFFF59E0B); // pending / todo
 }

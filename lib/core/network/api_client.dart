@@ -3,7 +3,9 @@
 // Created Date: 29-Sep-2026
 // Title: ApiClient
 // Description:
-//
+//   Thin Dio wrapper for all API calls. Provides GET and POST helpers,
+//   attaches the Authorization header when an auth header provider is
+//   given, and maps Dio errors into ApiException types.
 //
 // Class:
 //   ApiClient
@@ -15,8 +17,12 @@ import 'package:dio/dio.dart';
 import 'package:task_flow/core/config/server_config.dart';
 import 'package:task_flow/core/network/api_exception.dart';
 
+/// Returns the full Authorization header value (e.g. `Bearer <token>`),
+/// or null when the user is not logged in.
+typedef AuthHeaderProvider = Future<String?> Function();
+
 class ApiClient {
-  ApiClient({Dio? dio})
+  ApiClient({Dio? dio, AuthHeaderProvider? authHeaderProvider})
     : _dio =
           dio ??
           Dio(
@@ -31,9 +37,36 @@ class ApiClient {
                 'ngrok-skip-browser-warning': 'true',
               },
             ),
-          );
+          ) {
+    if (authHeaderProvider != null) {
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            final String? authHeader = await authHeaderProvider();
+            if (authHeader != null && authHeader.isNotEmpty) {
+              options.headers['Authorization'] = authHeader;
+            }
+            handler.next(options);
+          },
+        ),
+      );
+    }
+  }
 
   final Dio _dio;
+
+  Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final Response<Map<String, dynamic>> response = await _dio
+          .get<Map<String, dynamic>>(path, queryParameters: queryParameters);
+      return response.data ?? <String, dynamic>{};
+    } on DioException catch (e) {
+      throw _mapError(e);
+    }
+  }
 
   Future<Map<String, dynamic>> post(String path, {Object? data}) async {
     try {

@@ -1,4 +1,24 @@
-file
+// ============================================================================
+// File: login_page.dart
+// Created Date: 27-Sep-2026
+// Title: LoginPage
+// Description:
+//
+//   Provides the responsive login interface for TaskFlow.
+//
+//   Handles:
+//   - Email and password input
+//   - Form validation and field-level error display
+//   - Login state and loading state through LoginBloc
+//   - Password visibility toggle
+//   - API error display
+//   - Navigation to the tasks screen after successful login
+//
+// Class:
+//   LoginPage
+//
+// Author: Ashwanth V Praveen
+// ============================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

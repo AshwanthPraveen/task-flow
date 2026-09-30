@@ -16,6 +16,7 @@
 // ============================================================================
 
 import 'package:equatable/equatable.dart';
+import 'package:task_flow/features/tasks_home/domain/entities/task_entity.dart';
 
 abstract class TasksEvent extends Equatable {
   const TasksEvent();
@@ -34,4 +35,13 @@ class TasksLoadMoreRequested extends TasksEvent {
 
 class TasksRefreshed extends TasksEvent {
   const TasksRefreshed();
+}
+
+class TasksTaskAdded extends TasksEvent {
+  const TasksTaskAdded(this.task);
+
+  final TaskEntity task;
+
+  @override
+  List<Object?> get props => [task];
 }

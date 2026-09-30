@@ -23,9 +23,11 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:task_flow/core/theme/app_colors.dart';
 import 'package:task_flow/core/constants/app_strings.dart';
 import 'package:task_flow/core/widgets/app_bar.dart';
+import 'package:task_flow/features/create_task/presentation/pages/create_task_dialog.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_bloc.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_event.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_state.dart';
+import 'package:task_flow/features/tasks_home/presentation/create_task_card.dart';
 import 'package:task_flow/features/tasks_home/presentation/task_card.dart';
 
 class TasksHomePage extends StatefulWidget {
@@ -150,9 +152,22 @@ class _TasksHomePageState extends State<TasksHomePage> {
                   crossAxisCount: _columnCount(constraints.maxWidth),
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
-                  childCount: state.tasks.length,
+                  childCount: state.tasks.length + 1,
                   itemBuilder: (context, index) {
-                    return TaskCard(task: state.tasks[index]);
+                    if (index == 0) {
+                      return CreateTaskCard(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => const CreateTaskDialog(),
+                          );
+                        },
+                      );
+                    }
+
+                    final int taskIndex = index - 1;
+
+                    return TaskCard(task: state.tasks[taskIndex]);
                   },
                 ),
               ),

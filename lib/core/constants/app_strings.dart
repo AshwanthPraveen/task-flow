@@ -112,4 +112,15 @@ class AppStrings {
   static const String october = 'Oct';
   static const String november = 'Nov';
   static const String december = 'Dec';
+
+  // ------------------------------------------------------
+  // Create Task
+  // ------------------------------------------------------
+  static const String createTask = 'Create Task';
+  static const String taskTitle = 'Task title';
+  static const String taskDescription = 'Task description';
+  static const String create = 'Create';
+  static const String close = 'Close';
+  static const String taskCreated = 'Task created';
+  static const String taskCreatedMessage = 'Your task was added successfully.';
 }

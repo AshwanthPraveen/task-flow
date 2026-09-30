@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_flow/features/create_task/presentation/bloc/create_task_bloc.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_bloc.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
@@ -21,6 +22,7 @@ class TaskFlowApp extends StatelessWidget {
       providers: [
         BlocProvider<LoginBloc>(create: (_) => getIt<LoginBloc>()),
         BlocProvider<TasksBloc>(create: (_) => getIt<TasksBloc>()),
+        BlocProvider<CreateTaskBloc>(create: (_) => getIt<CreateTaskBloc>()),
       ],
       child: MaterialApp.router(
         title: 'Task Flow',

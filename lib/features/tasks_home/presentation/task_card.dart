@@ -87,65 +87,60 @@ class TaskCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(color: accent, width: AppSpacing.xxs),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(width: AppSpacing.xxs, color: accent),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        task.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.subtitle.copyWith(
-                          fontSize: titleSize,
-                        ),
-                      ),
-                      if (hasDescription) ...[
-                        const SizedBox(height: AppSpacing.xxs),
-                        Text(
-                          description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.body.copyWith(
-                            fontSize: bodySize,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          _StatusChip(
-                            label: _statusLabel(task.status),
-                            color: accent,
-                            fontSize: labelSize,
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.schedule,
-                            size: bodySize,
-                            color: AppColors.textMuted,
-                          ),
-                          const SizedBox(width: AppSpacing.xxs),
-                          Text(
-                            _relativeTime(task.updatedAt),
-                            style: AppTextStyles.caption.copyWith(
-                              fontSize: captionSize,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+              Text(
+                task.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.subtitle.copyWith(fontSize: titleSize),
+              ),
+
+              if (hasDescription) ...[
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  description,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(fontSize: bodySize),
                 ),
+              ],
+
+              const SizedBox(height: AppSpacing.sm),
+
+              Row(
+                children: [
+                  _StatusChip(
+                    label: _statusLabel(task.status),
+                    color: accent,
+                    fontSize: labelSize,
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.schedule,
+                    size: bodySize,
+                    color: AppColors.textMuted,
+                  ),
+                  const SizedBox(width: AppSpacing.xxs),
+                  Text(
+                    _relativeTime(task.updatedAt),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: captionSize,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

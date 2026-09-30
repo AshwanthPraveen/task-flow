@@ -15,7 +15,6 @@
 
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:task_flow/core/network/api_client.dart';
 import 'package:task_flow/core/storage/user_details.dart';
 import 'package:task_flow/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -24,6 +23,12 @@ import 'package:task_flow/features/auth/data/repositories/auth_repository_impl.d
 import 'package:task_flow/features/auth/domain/repositories/auth_repository.dart';
 import 'package:task_flow/features/auth/domain/usecases/login_usecase.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_bloc.dart';
+import 'package:task_flow/features/create_task/data/datasources/create_task_remote_data_source.dart';
+import 'package:task_flow/features/create_task/data/datasources/create_task_remote_data_source_impl.dart';
+import 'package:task_flow/features/create_task/data/repositories/create_task_repository_impl.dart';
+import 'package:task_flow/features/create_task/domain/repositories/create_task_repository.dart';
+import 'package:task_flow/features/create_task/domain/usecases/create_task_usecase.dart';
+import 'package:task_flow/features/create_task/presentation/bloc/create_task_bloc.dart';
 import 'package:task_flow/features/tasks_home/data/datasources/task_remote_data_source.dart';
 import 'package:task_flow/features/tasks_home/data/datasources/task_remote_data_source_impl.dart';
 import 'package:task_flow/features/tasks_home/data/repositories/task_repository_impl.dart';
@@ -38,6 +43,7 @@ Future<void> setupDependencies() async {
   _registerCore();
   _registerAuth();
   _registerTasksHome();
+  _registerCreateTask();
 }
 
 // ---------------------------------------------------------------------------
@@ -116,5 +122,33 @@ void _registerTasksHome() {
   // Blocs
   getIt.registerFactory<TasksBloc>(
     () => TasksBloc(getTasksUseCase: getIt<GetTasksUseCase>()),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Feature: Create Task
+// ---------------------------------------------------------------------------
+void _registerCreateTask() {
+  // Data sources
+  getIt.registerLazySingleton<CreateTaskRemoteDataSource>(
+    () => CreateTaskRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<CreateTaskRepository>(
+    () => CreateTaskRepositoryImpl(
+      remoteDataSource: getIt<CreateTaskRemoteDataSource>(),
+      userDetails: getIt<UserDetails>(),
+    ),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton<CreateTaskUseCase>(
+    () => CreateTaskUseCase(getIt<CreateTaskRepository>()),
+  );
+
+  // Blocs
+  getIt.registerFactory<CreateTaskBloc>(
+    () => CreateTaskBloc(createTaskUseCase: getIt<CreateTaskUseCase>()),
   );
 }

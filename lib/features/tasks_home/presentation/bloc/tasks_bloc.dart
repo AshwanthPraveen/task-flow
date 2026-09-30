@@ -24,9 +24,29 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
     on<TasksFetched>(_onFetched);
     on<TasksLoadMoreRequested>(_onLoadMoreRequested);
     on<TasksRefreshed>(_onRefreshed);
+    on<TasksTaskAdded>(_onTaskAdded);
   }
 
   final GetTasksUseCase _getTasksUseCase;
+  void _onTaskAdded(TasksTaskAdded event, Emitter<TasksState> emit) {
+    final TasksState current = state;
+    final TaskEntity task = event.task;
+
+    if (current is TasksLoaded) {
+      // Already present (e.g. the same task arrived via WebSocket).
+      if (current.tasks.any((t) => t.id == task.id)) return;
+
+      emit(
+        current.copyWith(
+          tasks: [task, ...current.tasks],
+          total: current.total + 1,
+        ),
+      );
+    } else if (current is TasksEmpty) {
+      // First task ever: leave the empty state.
+      emit(TasksLoaded(tasks: [task], page: 1, total: 1, hasMore: false));
+    }
+  }
 
   Future<void> _onFetched(TasksFetched event, Emitter<TasksState> emit) async {
     if (state is TasksLoading) return;

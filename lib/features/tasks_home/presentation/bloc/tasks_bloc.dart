@@ -5,6 +5,7 @@
 // Description:
 //   Bloc that loads tasks page by page (infinite scroll), supports
 //   pull-to-refresh and keeps existing items when load-more or refresh fails.
+//   Also applies real-time task events received over the WebSocket.
 //
 // Class:
 //   TasksBloc
@@ -12,22 +13,57 @@
 // Author: Ashwanth V Praveen
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:task_flow/core/socket/task_socket_event.dart';
+import 'package:task_flow/core/socket/task_socket_event_type.dart';
+import 'package:task_flow/core/socket/task_socket_service.dart';
 import 'package:task_flow/features/tasks_home/domain/entities/task_entity.dart';
 import 'package:task_flow/features/tasks_home/domain/usecases/get_tasks_usecase.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_event.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_state.dart';
 
 class TasksBloc extends Bloc<TasksEvent, TasksState> {
-  TasksBloc({required this._getTasksUseCase}) : super(const TasksInitial()) {
+  TasksBloc({
+    required this._getTasksUseCase,
+    required TaskSocketService socketService,
+  }) : super(const TasksInitial()) {
     on<TasksFetched>(_onFetched);
     on<TasksLoadMoreRequested>(_onLoadMoreRequested);
     on<TasksRefreshed>(_onRefreshed);
     on<TasksTaskAdded>(_onTaskAdded);
+    on<TasksTaskUpdated>(_onTaskUpdated);
+    on<TasksTaskDeleted>(_onTaskDeleted);
+
+    _socketSubscription = socketService.events.listen(_onSocketEvent);
+
+    // Events sent while the socket was down were missed: reload page 1.
+    _reconnectedSubscription = socketService.reconnected.listen((_) {
+      if (!isClosed) add(const TasksRefreshed());
+    });
   }
 
   final GetTasksUseCase _getTasksUseCase;
+  late final StreamSubscription<TaskSocketEvent> _socketSubscription;
+  late final StreamSubscription<void> _reconnectedSubscription;
+
+  void _onSocketEvent(TaskSocketEvent event) {
+    if (isClosed) return;
+
+    switch (event.type) {
+      case TaskSocketEventType.created:
+        final TaskEntity? created = event.task;
+        if (created != null) add(TasksTaskAdded(created));
+      case TaskSocketEventType.updated:
+        final TaskEntity? updated = event.task;
+        if (updated != null) add(TasksTaskUpdated(updated));
+      case TaskSocketEventType.deleted:
+        add(TasksTaskDeleted(event.taskId));
+    }
+  }
+
   void _onTaskAdded(TasksTaskAdded event, Emitter<TasksState> emit) {
     final TasksState current = state;
     final TaskEntity task = event.task;
@@ -46,6 +82,49 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
       // First task ever: leave the empty state.
       emit(TasksLoaded(tasks: [task], page: 1, total: 1, hasMore: false));
     }
+  }
+
+  void _onTaskUpdated(TasksTaskUpdated event, Emitter<TasksState> emit) {
+    final TasksState current = state;
+    if (current is! TasksLoaded) return;
+
+    final int index = current.tasks.indexWhere((t) => t.id == event.task.id);
+    if (index == -1) return;
+
+    // Ignore stale events (an older version than the one already shown).
+    if (event.task.version < current.tasks[index].version) return;
+
+    final List<TaskEntity> tasks = [...current.tasks];
+    tasks[index] = event.task;
+
+    emit(current.copyWith(tasks: tasks));
+  }
+
+  void _onTaskDeleted(TasksTaskDeleted event, Emitter<TasksState> emit) {
+    final TasksState current = state;
+    if (current is! TasksLoaded) return;
+    if (!current.tasks.any((t) => t.id == event.id)) return;
+
+    final List<TaskEntity> tasks = current.tasks
+        .where((t) => t.id != event.id)
+        .toList();
+
+    if (tasks.isEmpty) {
+      // Nothing left on this page: show empty, or reload if more pages exist.
+      if (current.hasMore) {
+        add(const TasksRefreshed());
+      } else {
+        emit(const TasksEmpty());
+      }
+      return;
+    }
+
+    emit(
+      current.copyWith(
+        tasks: tasks,
+        total: current.total > 0 ? current.total - 1 : 0,
+      ),
+    );
   }
 
   Future<void> _onFetched(TasksFetched event, Emitter<TasksState> emit) async {
@@ -193,5 +272,12 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
   ) {
     final Set<int> ids = existing.map((task) => task.id).toSet();
     return [...existing, ...incoming.where((task) => ids.add(task.id))];
+  }
+
+  @override
+  Future<void> close() async {
+    await _socketSubscription.cancel();
+    await _reconnectedSubscription.cancel();
+    return super.close();
   }
 }

@@ -13,6 +13,8 @@
 
 import 'package:equatable/equatable.dart';
 
+import 'package:task_flow/features/tasks_home/domain/entities/task_sync_state.dart';
+
 class TaskEntity extends Equatable {
   const TaskEntity({
     required this.id,
@@ -24,6 +26,7 @@ class TaskEntity extends Equatable {
     required this.createdBy,
     required this.version,
     required this.localId,
+    this.syncState = TaskSyncState.synced,
   });
 
   final int id;
@@ -35,6 +38,11 @@ class TaskEntity extends Equatable {
   final int createdBy;
   final int version;
   final String? localId;
+  final TaskSyncState syncState;
+
+  bool get isPendingSync =>
+      syncState == TaskSyncState.pendingCreate ||
+      syncState == TaskSyncState.pendingUpdate;
 
   @override
   List<Object?> get props => [
@@ -47,5 +55,6 @@ class TaskEntity extends Equatable {
     createdBy,
     version,
     localId,
+    syncState,
   ];
 }

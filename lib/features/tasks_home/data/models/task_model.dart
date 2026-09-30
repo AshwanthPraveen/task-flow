@@ -4,7 +4,8 @@
 // Title: TaskModel
 // Description:
 //   Data model for a task in the tasks API response. Handles JSON parsing and
-//   converts to TaskEntity.
+//   converts to TaskEntity. Also carries the local sync state when the task
+//   is read from the local database.
 //
 // Class:
 //   TaskModel
@@ -13,6 +14,7 @@
 // ============================================================================
 
 import 'package:task_flow/features/tasks_home/domain/entities/task_entity.dart';
+import 'package:task_flow/features/tasks_home/domain/entities/task_sync_state.dart';
 
 class TaskModel {
   const TaskModel({
@@ -25,6 +27,7 @@ class TaskModel {
     required this.createdBy,
     required this.version,
     required this.localId,
+    this.syncState = TaskSyncState.synced,
   });
 
   final int id;
@@ -36,6 +39,7 @@ class TaskModel {
   final int createdBy;
   final int version;
   final String? localId;
+  final TaskSyncState syncState;
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
     return TaskModel(
@@ -62,6 +66,7 @@ class TaskModel {
       createdBy: createdBy,
       version: version,
       localId: localId,
+      syncState: syncState,
     );
   }
 }

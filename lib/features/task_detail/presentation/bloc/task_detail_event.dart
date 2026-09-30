@@ -24,6 +24,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'package:task_flow/features/task_detail/presentation/bloc/task_detail_state.dart';
+import 'package:task_flow/features/tasks_home/domain/entities/task_entity.dart';
 
 abstract class TaskDetailEvent extends Equatable {
   const TaskDetailEvent();
@@ -90,4 +91,27 @@ class TaskDetailDeleteConfirmed extends TaskDetailEvent {
 /// Clears the one-time feedback after the page has handled it.
 class TaskDetailFeedbackReset extends TaskDetailEvent {
   const TaskDetailFeedbackReset();
+}
+
+class TaskDetailRemoteUpdated extends TaskDetailEvent {
+  const TaskDetailRemoteUpdated(this.task);
+
+  final TaskEntity task;
+
+  @override
+  List<Object?> get props => <Object?>[task];
+}
+
+class TaskDetailRemoteDeleted extends TaskDetailEvent {
+  const TaskDetailRemoteDeleted();
+
+  @override
+  List<Object?> get props => <Object?>[];
+}
+
+class TaskDetailRefreshed extends TaskDetailEvent {
+  const TaskDetailRefreshed();
+
+  @override
+  List<Object?> get props => <Object?>[];
 }

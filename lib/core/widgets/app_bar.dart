@@ -19,6 +19,7 @@ import 'package:go_router/go_router.dart';
 import 'package:task_flow/core/di/injection.dart';
 import 'package:task_flow/core/responsive/responsive.dart';
 import 'package:task_flow/core/router/app_router.dart';
+import 'package:task_flow/core/socket/task_socket_service.dart';
 import 'package:task_flow/core/storage/user_details.dart';
 import 'package:task_flow/core/theme/app_colors.dart';
 import 'package:task_flow/core/theme/app_font_sizes.dart';
@@ -70,7 +71,9 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
 
     if (confirmed != true || !context.mounted) return;
-
+    // Disconnect from socket
+    getIt<TaskSocketService>().disconnect();
+    // Clear user data
     await getIt<UserDetails>().clear();
 
     if (!context.mounted) return;

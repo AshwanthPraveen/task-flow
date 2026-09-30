@@ -20,7 +20,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:task_flow/core/di/injection.dart';
 import 'package:task_flow/core/router/app_router.dart';
+import 'package:task_flow/core/socket/task_socket_service.dart';
 import 'package:task_flow/core/theme/app_colors.dart';
 import 'package:task_flow/core/constants/app_strings.dart';
 import 'package:task_flow/core/widgets/app_bar.dart';
@@ -50,6 +52,8 @@ class _TasksHomePageState extends State<TasksHomePage> {
     super.initState();
 
     _bloc = context.read<TasksBloc>();
+
+    getIt<TaskSocketService>().connect();
 
     _bloc.add(const TasksFetched());
 
@@ -83,12 +87,8 @@ class _TasksHomePageState extends State<TasksHomePage> {
         .timeout(const Duration(seconds: 30), onTimeout: () => _bloc.state);
   }
 
-  Future<void> _openTask(int taskId) async {
-    await context.push(AppRouter.taskDetailPath(taskId));
-
-    if (!mounted) return;
-
-    _bloc.add(const TasksFetched());
+  void _openTask(int taskId) {
+    context.push(AppRouter.taskDetailPath(taskId));
   }
 
   int _columnCount(double width) {

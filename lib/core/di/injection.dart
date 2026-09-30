@@ -16,6 +16,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_flow/core/network/api_client.dart';
+import 'package:task_flow/core/socket/task_socket_service.dart';
+import 'package:task_flow/core/database/app_database.dart';
+import 'package:task_flow/features/tasks_home/data/datasources/task_local_data_source.dart';
+import 'package:task_flow/features/tasks_home/data/datasources/task_local_data_source_impl.dart';
 import 'package:task_flow/core/storage/user_details.dart';
 import 'package:task_flow/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:task_flow/features/auth/data/datasources/auth_remote_data_source_impl.dart';
@@ -57,10 +61,12 @@ final GetIt getIt = GetIt.instance;
 Future<void> setupDependencies() async {
   await _registerExternal();
   _registerCore();
+  _registerDatabase();
   _registerAuth();
   _registerTasksHome();
   _registerCreateTask();
   _registerTaskDetail();
+  _registerSocket();
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +134,10 @@ void _registerTasksHome() {
 
   // Repositories
   getIt.registerLazySingleton<TaskRepository>(
-    () => TaskRepositoryImpl(remoteDataSource: getIt<TaskRemoteDataSource>()),
+    () => TaskRepositoryImpl(
+      remoteDataSource: getIt<TaskRemoteDataSource>(),
+      localDataSource: getIt<TaskLocalDataSource>(),
+    ),
   );
 
   // Use cases
@@ -138,7 +147,10 @@ void _registerTasksHome() {
 
   // Blocs
   getIt.registerFactory<TasksBloc>(
-    () => TasksBloc(getTasksUseCase: getIt<GetTasksUseCase>()),
+    () => TasksBloc(
+      getTasksUseCase: getIt<GetTasksUseCase>(),
+      socketService: getIt<TaskSocketService>(),
+    ),
   );
 }
 
@@ -189,6 +201,7 @@ void _registerTaskDetail() {
   getIt.registerLazySingleton<GetTaskDetailRepository>(
     () => GetTaskDetailRepositoryImpl(
       remoteDataSource: getIt<GetTaskDetailRemoteDataSource>(),
+      localDataSource: getIt<TaskLocalDataSource>(),
     ),
   );
   getIt.registerLazySingleton<UpdateTaskRepository>(
@@ -219,6 +232,20 @@ void _registerTaskDetail() {
       getTaskDetailUseCase: getIt<GetTaskDetailUseCase>(),
       updateTaskUseCase: getIt<UpdateTaskUseCase>(),
       deleteTaskUseCase: getIt<DeleteTaskUseCase>(),
+      socketService: getIt<TaskSocketService>(),
     ),
+  );
+}
+
+void _registerSocket() {
+  getIt.registerLazySingleton<TaskSocketService>(
+    () => TaskSocketService(getIt<UserDetails>()),
+  );
+}
+
+void _registerDatabase() {
+  getIt.registerLazySingleton<AppDatabase>(() => AppDatabase());
+  getIt.registerLazySingleton<TaskLocalDataSource>(
+    () => TaskLocalDataSourceImpl(getIt<AppDatabase>()),
   );
 }

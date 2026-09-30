@@ -45,3 +45,21 @@ class TasksTaskAdded extends TasksEvent {
   @override
   List<Object?> get props => [task];
 }
+
+class TasksTaskUpdated extends TasksEvent {
+  const TasksTaskUpdated(this.task);
+
+  final TaskEntity task;
+
+  @override
+  List<Object?> get props => <Object?>[task];
+}
+
+class TasksTaskDeleted extends TasksEvent {
+  const TasksTaskDeleted(this.id);
+
+  final int id;
+
+  @override
+  List<Object?> get props => <Object?>[id];
+}

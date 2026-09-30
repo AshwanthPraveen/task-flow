@@ -50,7 +50,8 @@ class AppStrings {
 
   static const String back = 'Back';
   static const String logout = 'Logout';
-  static const String logoutMessage = 'Are you sure you want to log out?';
+  static const String logoutMessage =
+      'Are you sure you want to log out? Any changes that have not synced yet will be lost.';
 
   // --------------------------------------------------------------------------
   // Tasks
@@ -190,4 +191,18 @@ class AppStrings {
   static const String taskDeleted = 'Task deleted';
   static const String taskDeletedMessage =
       'Your task was deleted successfully.';
+
+  // --------------------------------------------------------------------------
+  // Connection & Sync
+  // --------------------------------------------------------------------------
+
+  static const String offlineBanner =
+      'You are offline. Changes are saved on this device.';
+  static const String syncingBanner = 'Syncing your changes…';
+  static const String syncRetryBanner =
+      'Could not sync. Will retry automatically.';
+  static const String liveReconnecting = 'Reconnecting to live updates…';
+  static const String liveDisconnected = 'Live updates are off.';
+  static const String waitingToSync = 'Waiting to sync';
+  static const String syncFailed = 'Sync failed';
 }

@@ -47,6 +47,7 @@ import 'package:task_flow/core/theme/app_spacing.dart';
 import 'package:task_flow/core/theme/app_text_styles.dart';
 import 'package:task_flow/core/widgets/app_bar.dart';
 import 'package:task_flow/core/widgets/app_button.dart';
+import 'package:task_flow/core/widgets/connection_banner.dart';
 import 'package:task_flow/features/task_detail/presentation/bloc/task_detail_bloc.dart';
 import 'package:task_flow/features/task_detail/presentation/bloc/task_detail_event.dart';
 import 'package:task_flow/features/task_detail/presentation/bloc/task_detail_state.dart';
@@ -143,6 +144,7 @@ class _TaskDetailView extends StatelessWidget {
           return Scaffold(
             backgroundColor: AppColors.background,
             appBar: _buildAppBar(context),
+            bottomNavigationBar: const ConnectionBanner(),
             body: AbsorbPointer(
               absorbing: state.isDeleting,
               child: _buildBody(context, state),

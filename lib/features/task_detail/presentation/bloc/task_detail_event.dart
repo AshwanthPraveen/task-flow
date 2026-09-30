@@ -102,6 +102,16 @@ class TaskDetailRemoteUpdated extends TaskDetailEvent {
   List<Object?> get props => <Object?>[task];
 }
 
+/// The task shown here was created offline and now has its real id.
+class TaskDetailIdRemapped extends TaskDetailEvent {
+  const TaskDetailIdRemapped(this.task);
+
+  final TaskEntity task;
+
+  @override
+  List<Object?> get props => <Object?>[task];
+}
+
 class TaskDetailRemoteDeleted extends TaskDetailEvent {
   const TaskDetailRemoteDeleted();
 

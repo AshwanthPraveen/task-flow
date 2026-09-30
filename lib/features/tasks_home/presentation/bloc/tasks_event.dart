@@ -55,6 +55,17 @@ class TasksTaskUpdated extends TasksEvent {
   List<Object?> get props => <Object?>[task];
 }
 
+/// An offline-created task got its real id from the server.
+class TasksTaskIdRemapped extends TasksEvent {
+  const TasksTaskIdRemapped(this.oldId, this.task);
+
+  final int oldId;
+  final TaskEntity task;
+
+  @override
+  List<Object?> get props => <Object?>[oldId, task];
+}
+
 class TasksTaskDeleted extends TasksEvent {
   const TasksTaskDeleted(this.id);
 

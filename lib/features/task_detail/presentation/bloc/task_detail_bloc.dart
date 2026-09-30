@@ -22,6 +22,7 @@ import 'package:task_flow/core/errors/failures.dart';
 import 'package:task_flow/core/socket/task_socket_event.dart';
 import 'package:task_flow/core/socket/task_socket_event_type.dart';
 import 'package:task_flow/core/socket/task_socket_service.dart';
+import 'package:task_flow/core/sync/task_local_change_bus.dart';
 import 'package:task_flow/features/task_detail/domain/usecases/delete_task_usecase.dart';
 import 'package:task_flow/features/task_detail/domain/usecases/get_task_detail_usecase.dart';
 import 'package:task_flow/features/task_detail/domain/usecases/update_task_usecase.dart';
@@ -35,6 +36,7 @@ class TaskDetailBloc extends Bloc<TaskDetailEvent, TaskDetailState> {
     required this._updateTaskUseCase,
     required this._deleteTaskUseCase,
     required TaskSocketService socketService,
+    required TaskLocalChangeBus localChanges,
   }) : super(const TaskDetailState()) {
     on<TaskDetailFetched>(_onFetched);
     on<TaskDetailEditStarted>(_onEditStarted);
@@ -46,9 +48,11 @@ class TaskDetailBloc extends Bloc<TaskDetailEvent, TaskDetailState> {
     on<TaskDetailFeedbackReset>(_onFeedbackReset);
     on<TaskDetailRemoteUpdated>(_onRemoteUpdated);
     on<TaskDetailRemoteDeleted>(_onRemoteDeleted);
+    on<TaskDetailIdRemapped>(_onIdRemapped);
     on<TaskDetailRefreshed>(_onRefreshed);
 
     _socketSubscription = socketService.events.listen(_onSocketEvent);
+    _localChangeSubscription = localChanges.events.listen(_onSocketEvent);
 
     // Events sent while the socket was down were missed: reload quietly.
     _reconnectedSubscription = socketService.reconnected.listen((_) {
@@ -60,6 +64,7 @@ class TaskDetailBloc extends Bloc<TaskDetailEvent, TaskDetailState> {
   final UpdateTaskUseCase _updateTaskUseCase;
   final DeleteTaskUseCase _deleteTaskUseCase;
   late final StreamSubscription<TaskSocketEvent> _socketSubscription;
+  late final StreamSubscription<TaskSocketEvent> _localChangeSubscription;
   late final StreamSubscription<void> _reconnectedSubscription;
 
   static const int _minTitleLength = 5;
@@ -83,6 +88,9 @@ class TaskDetailBloc extends Bloc<TaskDetailEvent, TaskDetailState> {
         add(const TaskDetailRemoteDeleted());
       case TaskSocketEventType.created:
         break;
+      case TaskSocketEventType.idRemapped:
+        final TaskEntity? remapped = event.task;
+        if (remapped != null) add(TaskDetailIdRemapped(remapped));
     }
   }
 
@@ -337,6 +345,18 @@ class TaskDetailBloc extends Bloc<TaskDetailEvent, TaskDetailState> {
     emit(state.copyWith(task: event.task));
   }
 
+  void _onIdRemapped(
+    TaskDetailIdRemapped event,
+    Emitter<TaskDetailState> emit,
+  ) {
+    // Later saves and refreshes must use the real id.
+    _taskId = event.task.id;
+
+    if (state.task == null || _isDeleted || state.isBusy) return;
+
+    emit(state.copyWith(task: event.task));
+  }
+
   void _onRemoteDeleted(
     TaskDetailRemoteDeleted event,
     Emitter<TaskDetailState> emit,
@@ -379,6 +399,7 @@ class TaskDetailBloc extends Bloc<TaskDetailEvent, TaskDetailState> {
   @override
   Future<void> close() async {
     await _socketSubscription.cancel();
+    await _localChangeSubscription.cancel();
     await _reconnectedSubscription.cancel();
     return super.close();
   }

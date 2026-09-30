@@ -20,6 +20,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_flow/core/socket/task_socket_event.dart';
 import 'package:task_flow/core/socket/task_socket_event_type.dart';
 import 'package:task_flow/core/socket/task_socket_service.dart';
+import 'package:task_flow/core/sync/task_local_change_bus.dart';
 import 'package:task_flow/features/tasks_home/domain/entities/task_entity.dart';
 import 'package:task_flow/features/tasks_home/domain/usecases/get_tasks_usecase.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_event.dart';
@@ -29,6 +30,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
   TasksBloc({
     required this._getTasksUseCase,
     required TaskSocketService socketService,
+    required TaskLocalChangeBus localChanges,
   }) : super(const TasksInitial()) {
     on<TasksFetched>(_onFetched);
     on<TasksLoadMoreRequested>(_onLoadMoreRequested);
@@ -36,8 +38,10 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
     on<TasksTaskAdded>(_onTaskAdded);
     on<TasksTaskUpdated>(_onTaskUpdated);
     on<TasksTaskDeleted>(_onTaskDeleted);
+    on<TasksTaskIdRemapped>(_onTaskIdRemapped);
 
     _socketSubscription = socketService.events.listen(_onSocketEvent);
+    _localChangeSubscription = localChanges.events.listen(_onSocketEvent);
 
     // Events sent while the socket was down were missed: reload page 1.
     _reconnectedSubscription = socketService.reconnected.listen((_) {
@@ -47,6 +51,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
 
   final GetTasksUseCase _getTasksUseCase;
   late final StreamSubscription<TaskSocketEvent> _socketSubscription;
+  late final StreamSubscription<TaskSocketEvent> _localChangeSubscription;
   late final StreamSubscription<void> _reconnectedSubscription;
 
   void _onSocketEvent(TaskSocketEvent event) {
@@ -61,6 +66,9 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
         if (updated != null) add(TasksTaskUpdated(updated));
       case TaskSocketEventType.deleted:
         add(TasksTaskDeleted(event.taskId));
+      case TaskSocketEventType.idRemapped:
+        final TaskEntity? remapped = event.task;
+        if (remapped != null) add(TasksTaskIdRemapped(event.taskId, remapped));
     }
   }
 
@@ -96,6 +104,30 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
 
     final List<TaskEntity> tasks = [...current.tasks];
     tasks[index] = event.task;
+
+    emit(current.copyWith(tasks: tasks));
+  }
+
+  void _onTaskIdRemapped(
+    TasksTaskIdRemapped event,
+    Emitter<TasksState> emit,
+  ) {
+    final TasksState current = state;
+    if (current is! TasksLoaded) return;
+
+    final int oldIndex = current.tasks.indexWhere((t) => t.id == event.oldId);
+    if (oldIndex == -1) return;
+
+    final List<TaskEntity> tasks = [...current.tasks];
+    final int newIndex = tasks.indexWhere((t) => t.id == event.task.id);
+
+    if (newIndex == -1) {
+      tasks[oldIndex] = event.task;
+    } else {
+      // The real task already arrived (WebSocket echo): keep one copy.
+      tasks[newIndex] = event.task;
+      tasks.removeAt(oldIndex);
+    }
 
     emit(current.copyWith(tasks: tasks));
   }
@@ -277,6 +309,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
   @override
   Future<void> close() async {
     await _socketSubscription.cancel();
+    await _localChangeSubscription.cancel();
     await _reconnectedSubscription.cancel();
     return super.close();
   }

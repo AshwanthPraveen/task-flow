@@ -20,6 +20,8 @@ import 'package:task_flow/core/network/api_exception.dart';
 import 'package:task_flow/features/tasks_home/data/datasources/task_local_data_source.dart';
 import 'package:task_flow/features/tasks_home/data/datasources/task_remote_data_source.dart';
 import 'package:task_flow/features/tasks_home/data/models/task_list_model.dart';
+import 'package:task_flow/features/tasks_home/data/models/task_model.dart';
+import 'package:task_flow/features/tasks_home/domain/entities/task_sync_state.dart';
 import 'package:task_flow/features/tasks_home/domain/entities/task_list_entity.dart';
 import 'package:task_flow/features/tasks_home/domain/repositories/task_repository.dart';
 
@@ -43,7 +45,7 @@ class TaskRepositoryImpl implements TaskRepository {
         limit: limit,
       );
       await _cacheTasks(tasks);
-      return Right(tasks.toEntity());
+      return Right((await _withLocalChanges(tasks)).toEntity());
     } on TimeoutApiException catch (e) {
       return _fromCache(
         page: page,
@@ -64,6 +66,42 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   /// Best effort: a cache problem must never break an online fetch.
+  /// Applies changes that are not on the server yet to a server page, so a
+  /// refresh (for example right after the socket reconnects) does not make
+  /// offline work disappear before it is synced.
+  Future<TaskListModel> _withLocalChanges(TaskListModel server) async {
+    final List<TaskModel> unsynced;
+    try {
+      unsynced = await _localDataSource.getUnsyncedTasks();
+    } catch (_) {
+      return server;
+    }
+    if (unsynced.isEmpty) return server;
+
+    final Map<int, TaskModel> byId = {
+      for (final TaskModel task in unsynced) task.id: task,
+    };
+
+    final List<TaskModel> items = [
+      for (final TaskModel task in server.items)
+        if (byId[task.id]?.syncState != TaskSyncState.pendingDelete)
+          byId[task.id] ?? task,
+    ];
+
+    final List<TaskModel> created = unsynced.where((t) => t.id < 0).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final int deleted = unsynced
+        .where((t) => t.syncState == TaskSyncState.pendingDelete)
+        .length;
+
+    return TaskListModel(
+      items: server.page == 1 ? [...created, ...items] : items,
+      page: server.page,
+      limit: server.limit,
+      total: server.total + created.length - deleted,
+    );
+  }
+
   Future<void> _cacheTasks(TaskListModel tasks) async {
     try {
       await _localDataSource.upsertTasks(tasks.items);

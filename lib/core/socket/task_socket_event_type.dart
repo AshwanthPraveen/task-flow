@@ -11,4 +11,6 @@
 // Author: Ashwanth V Praveen
 // ============================================================================
 
-enum TaskSocketEventType { created, updated, deleted }
+/// [idRemapped] is local only: an offline task got its server id. The event's
+/// taskId is the old temporary id and its task carries the new one.
+enum TaskSocketEventType { created, updated, deleted, idRemapped }

@@ -17,6 +17,11 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_flow/core/network/api_client.dart';
 import 'package:task_flow/core/socket/task_socket_service.dart';
+import 'package:task_flow/core/network/connectivity_service.dart';
+import 'package:task_flow/core/sync/sync_remote_data_source.dart';
+import 'package:task_flow/core/sync/sync_remote_data_source_impl.dart';
+import 'package:task_flow/core/sync/task_local_change_bus.dart';
+import 'package:task_flow/core/sync/task_sync_service.dart';
 import 'package:task_flow/core/database/app_database.dart';
 import 'package:task_flow/features/tasks_home/data/datasources/task_local_data_source.dart';
 import 'package:task_flow/features/tasks_home/data/datasources/task_local_data_source_impl.dart';
@@ -67,6 +72,7 @@ Future<void> setupDependencies() async {
   _registerCreateTask();
   _registerTaskDetail();
   _registerSocket();
+  _registerSync();
 }
 
 // ---------------------------------------------------------------------------
@@ -81,6 +87,7 @@ Future<void> _registerExternal() async {
 // Core
 // ---------------------------------------------------------------------------
 void _registerCore() {
+  getIt.registerLazySingleton<TaskLocalChangeBus>(() => TaskLocalChangeBus());
   getIt.registerLazySingleton<UserDetails>(
     () => UserDetails(getIt<SharedPreferences>()),
   );
@@ -150,6 +157,7 @@ void _registerTasksHome() {
     () => TasksBloc(
       getTasksUseCase: getIt<GetTasksUseCase>(),
       socketService: getIt<TaskSocketService>(),
+      localChanges: getIt<TaskLocalChangeBus>(),
     ),
   );
 }
@@ -167,6 +175,8 @@ void _registerCreateTask() {
   getIt.registerLazySingleton<CreateTaskRepository>(
     () => CreateTaskRepositoryImpl(
       remoteDataSource: getIt<CreateTaskRemoteDataSource>(),
+      localDataSource: getIt<TaskLocalDataSource>(),
+      changeBus: getIt<TaskLocalChangeBus>(),
       userDetails: getIt<UserDetails>(),
     ),
   );
@@ -207,11 +217,15 @@ void _registerTaskDetail() {
   getIt.registerLazySingleton<UpdateTaskRepository>(
     () => UpdateTaskRepositoryImpl(
       remoteDataSource: getIt<UpdateTaskRemoteDataSource>(),
+      localDataSource: getIt<TaskLocalDataSource>(),
+      changeBus: getIt<TaskLocalChangeBus>(),
     ),
   );
   getIt.registerLazySingleton<DeleteTaskRepository>(
     () => DeleteTaskRepositoryImpl(
       remoteDataSource: getIt<DeleteTaskRemoteDataSource>(),
+      localDataSource: getIt<TaskLocalDataSource>(),
+      changeBus: getIt<TaskLocalChangeBus>(),
     ),
   );
 
@@ -233,6 +247,7 @@ void _registerTaskDetail() {
       updateTaskUseCase: getIt<UpdateTaskUseCase>(),
       deleteTaskUseCase: getIt<DeleteTaskUseCase>(),
       socketService: getIt<TaskSocketService>(),
+      localChanges: getIt<TaskLocalChangeBus>(),
     ),
   );
 }
@@ -247,5 +262,22 @@ void _registerDatabase() {
   getIt.registerLazySingleton<AppDatabase>(() => AppDatabase());
   getIt.registerLazySingleton<TaskLocalDataSource>(
     () => TaskLocalDataSourceImpl(getIt<AppDatabase>()),
+  );
+}
+
+void _registerSync() {
+  getIt.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
+  getIt.registerLazySingleton<SyncRemoteDataSource>(
+    () => SyncRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TaskSyncService>(
+    () => TaskSyncService(
+      localDataSource: getIt<TaskLocalDataSource>(),
+      syncRemoteDataSource: getIt<SyncRemoteDataSource>(),
+      connectivity: getIt<ConnectivityService>(),
+      socketService: getIt<TaskSocketService>(),
+      changeBus: getIt<TaskLocalChangeBus>(),
+      userDetails: getIt<UserDetails>(),
+    ),
   );
 }

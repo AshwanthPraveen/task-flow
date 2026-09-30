@@ -23,6 +23,7 @@ import 'package:task_flow/core/theme/app_font_sizes.dart';
 import 'package:task_flow/core/theme/app_spacing.dart';
 import 'package:task_flow/core/theme/app_text_styles.dart';
 import 'package:task_flow/features/tasks_home/domain/entities/task_entity.dart';
+import 'package:task_flow/features/tasks_home/domain/entities/task_sync_state.dart';
 
 class TaskCard extends StatelessWidget {
   const TaskCard({super.key, required this.task, this.onTap});
@@ -128,6 +129,23 @@ class TaskCard extends StatelessWidget {
                     fontSize: labelSize,
                   ),
                   const Spacer(),
+                  if (task.syncState != TaskSyncState.synced) ...[
+                    Tooltip(
+                      message: task.syncState == TaskSyncState.failed
+                          ? AppStrings.syncFailed
+                          : AppStrings.waitingToSync,
+                      child: Icon(
+                        task.syncState == TaskSyncState.failed
+                            ? Icons.sync_problem_rounded
+                            : Icons.cloud_upload_outlined,
+                        size: bodySize,
+                        color: task.syncState == TaskSyncState.failed
+                            ? AppColors.error
+                            : AppColors.warning,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
                   Icon(
                     Icons.schedule,
                     size: bodySize,

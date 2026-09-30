@@ -22,6 +22,7 @@ import 'package:task_flow/features/task_detail/domain/repositories/get_task_deta
 import 'package:task_flow/features/tasks_home/data/datasources/task_local_data_source.dart';
 import 'package:task_flow/features/tasks_home/data/models/task_model.dart';
 import 'package:task_flow/features/tasks_home/domain/entities/task_entity.dart';
+import 'package:task_flow/features/tasks_home/domain/entities/task_sync_state.dart';
 
 class GetTaskDetailRepositoryImpl implements GetTaskDetailRepository {
   const GetTaskDetailRepositoryImpl({
@@ -34,6 +35,11 @@ class GetTaskDetailRepositoryImpl implements GetTaskDetailRepository {
 
   @override
   Future<Either<Failure, TaskEntity>> getTaskDetail({required int id}) async {
+    // Unsynced local changes are newer than the server copy (and a task with a
+    // temporary id does not exist on the server yet), so they win.
+    final TaskModel? unsynced = await _unsyncedLocal(id);
+    if (unsynced != null) return Right(unsynced.toEntity());
+
     try {
       final TaskModel task = await _remoteDataSource.getTaskDetail(id);
       await _cacheTask(task);
@@ -50,6 +56,16 @@ class GetTaskDetailRepositoryImpl implements GetTaskDetailRepository {
   }
 
   /// Best effort: a cache problem must never break an online fetch.
+  Future<TaskModel?> _unsyncedLocal(int id) async {
+    try {
+      final TaskModel? local = await _localDataSource.getTask(id);
+      if (local == null || local.syncState == TaskSyncState.synced) return null;
+      return local;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _cacheTask(TaskModel task) async {
     try {
       await _localDataSource.upsertTask(task);

@@ -23,9 +23,11 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:task_flow/core/di/injection.dart';
 import 'package:task_flow/core/router/app_router.dart';
 import 'package:task_flow/core/socket/task_socket_service.dart';
+import 'package:task_flow/core/sync/task_sync_service.dart';
 import 'package:task_flow/core/theme/app_colors.dart';
 import 'package:task_flow/core/constants/app_strings.dart';
 import 'package:task_flow/core/widgets/app_bar.dart';
+import 'package:task_flow/core/widgets/connection_banner.dart';
 import 'package:task_flow/features/create_task/presentation/pages/create_task_dialog.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_bloc.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_event.dart';
@@ -54,6 +56,7 @@ class _TasksHomePageState extends State<TasksHomePage> {
     _bloc = context.read<TasksBloc>();
 
     getIt<TaskSocketService>().connect();
+    getIt<TaskSyncService>().start();
 
     _bloc.add(const TasksFetched());
 
@@ -104,6 +107,7 @@ class _TasksHomePageState extends State<TasksHomePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const TaskFlowAppBar(title: AppStrings.tasksHome),
+      bottomNavigationBar: const ConnectionBanner(),
       body: BlocConsumer<TasksBloc, TasksState>(
         listenWhen: (previous, current) =>
             current is TasksLoaded &&

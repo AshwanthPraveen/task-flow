@@ -16,5 +16,6 @@ class ApiEndpoints {
 
   static const String login = '/auth/login';
   static const String tasks = '/tasks';
+  static const String sync = '/sync';
   static String taskById(int id) => '/tasks/$id';
 }

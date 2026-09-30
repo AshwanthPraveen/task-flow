@@ -20,6 +20,7 @@ import 'package:task_flow/core/di/injection.dart';
 import 'package:task_flow/core/responsive/responsive.dart';
 import 'package:task_flow/core/router/app_router.dart';
 import 'package:task_flow/core/socket/task_socket_service.dart';
+import 'package:task_flow/core/sync/task_sync_service.dart';
 import 'package:task_flow/core/storage/user_details.dart';
 import 'package:task_flow/core/theme/app_colors.dart';
 import 'package:task_flow/core/theme/app_font_sizes.dart';
@@ -30,6 +31,7 @@ import 'package:task_flow/core/constants/app_strings.dart';
 import 'package:task_flow/core/widgets/logout_confirm_dialog.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_bloc.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_event.dart';
+import 'package:task_flow/features/tasks_home/data/datasources/task_local_data_source.dart';
 
 class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -73,6 +75,9 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (confirmed != true || !context.mounted) return;
     // Disconnect from socket
     getIt<TaskSocketService>().disconnect();
+    // Stop syncing and remove this user's local tasks
+    getIt<TaskSyncService>().stop();
+    await getIt<TaskLocalDataSource>().clearAll();
     // Clear user data
     await getIt<UserDetails>().clear();
 

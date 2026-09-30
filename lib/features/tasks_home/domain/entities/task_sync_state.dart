@@ -12,4 +12,10 @@
 // Author: Ashwanth V Praveen
 // ============================================================================
 
-enum TaskSyncState { synced, pendingCreate, pendingUpdate, failed }
+enum TaskSyncState {
+  synced,
+  pendingCreate,
+  pendingUpdate,
+  pendingDelete,
+  failed,
+}

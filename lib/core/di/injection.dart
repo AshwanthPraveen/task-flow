@@ -35,6 +35,22 @@ import 'package:task_flow/features/tasks_home/data/repositories/task_repository_
 import 'package:task_flow/features/tasks_home/domain/repositories/task_repository.dart';
 import 'package:task_flow/features/tasks_home/domain/usecases/get_tasks_usecase.dart';
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_bloc.dart';
+import 'package:task_flow/features/task_detail/data/datasources/get_task_detail_remote_data_source.dart';
+import 'package:task_flow/features/task_detail/data/datasources/get_task_detail_remote_data_source_impl.dart';
+import 'package:task_flow/features/task_detail/data/repositories/get_task_detail_repository_impl.dart';
+import 'package:task_flow/features/task_detail/domain/repositories/get_task_detail_repository.dart';
+import 'package:task_flow/features/task_detail/domain/usecases/get_task_detail_usecase.dart';
+import 'package:task_flow/features/task_detail/presentation/bloc/task_detail_bloc.dart';
+import 'package:task_flow/features/task_detail/data/datasources/delete_task_remote_data_source.dart';
+import 'package:task_flow/features/task_detail/data/datasources/delete_task_remote_data_source_impl.dart';
+import 'package:task_flow/features/task_detail/data/datasources/update_task_remote_data_source.dart';
+import 'package:task_flow/features/task_detail/data/datasources/update_task_remote_data_source_impl.dart';
+import 'package:task_flow/features/task_detail/data/repositories/delete_task_repository_impl.dart';
+import 'package:task_flow/features/task_detail/data/repositories/update_task_repository_impl.dart';
+import 'package:task_flow/features/task_detail/domain/repositories/delete_task_repository.dart';
+import 'package:task_flow/features/task_detail/domain/repositories/update_task_repository.dart';
+import 'package:task_flow/features/task_detail/domain/usecases/delete_task_usecase.dart';
+import 'package:task_flow/features/task_detail/domain/usecases/update_task_usecase.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -44,6 +60,7 @@ Future<void> setupDependencies() async {
   _registerAuth();
   _registerTasksHome();
   _registerCreateTask();
+  _registerTaskDetail();
 }
 
 // ---------------------------------------------------------------------------
@@ -150,5 +167,58 @@ void _registerCreateTask() {
   // Blocs
   getIt.registerFactory<CreateTaskBloc>(
     () => CreateTaskBloc(createTaskUseCase: getIt<CreateTaskUseCase>()),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Feature: Task Detail
+// ---------------------------------------------------------------------------
+void _registerTaskDetail() {
+  // Data sources
+  getIt.registerLazySingleton<GetTaskDetailRemoteDataSource>(
+    () => GetTaskDetailRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<UpdateTaskRemoteDataSource>(
+    () => UpdateTaskRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<DeleteTaskRemoteDataSource>(
+    () => DeleteTaskRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<GetTaskDetailRepository>(
+    () => GetTaskDetailRepositoryImpl(
+      remoteDataSource: getIt<GetTaskDetailRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<UpdateTaskRepository>(
+    () => UpdateTaskRepositoryImpl(
+      remoteDataSource: getIt<UpdateTaskRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<DeleteTaskRepository>(
+    () => DeleteTaskRepositoryImpl(
+      remoteDataSource: getIt<DeleteTaskRemoteDataSource>(),
+    ),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton<GetTaskDetailUseCase>(
+    () => GetTaskDetailUseCase(getIt<GetTaskDetailRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateTaskUseCase>(
+    () => UpdateTaskUseCase(getIt<UpdateTaskRepository>()),
+  );
+  getIt.registerLazySingleton<DeleteTaskUseCase>(
+    () => DeleteTaskUseCase(getIt<DeleteTaskRepository>()),
+  );
+
+  // Blocs
+  getIt.registerFactory<TaskDetailBloc>(
+    () => TaskDetailBloc(
+      getTaskDetailUseCase: getIt<GetTaskDetailUseCase>(),
+      updateTaskUseCase: getIt<UpdateTaskUseCase>(),
+      deleteTaskUseCase: getIt<DeleteTaskUseCase>(),
+    ),
   );
 }

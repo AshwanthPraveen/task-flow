@@ -20,6 +20,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:task_flow/core/router/app_router.dart';
 import 'package:task_flow/core/theme/app_colors.dart';
 import 'package:task_flow/core/constants/app_strings.dart';
 import 'package:task_flow/core/widgets/app_bar.dart';
@@ -29,6 +30,7 @@ import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_event.dart
 import 'package:task_flow/features/tasks_home/presentation/bloc/tasks_state.dart';
 import 'package:task_flow/features/tasks_home/presentation/create_task_card.dart';
 import 'package:task_flow/features/tasks_home/presentation/task_card.dart';
+import 'package:go_router/go_router.dart';
 
 class TasksHomePage extends StatefulWidget {
   const TasksHomePage({super.key});
@@ -79,6 +81,14 @@ class _TasksHomePageState extends State<TasksHomePage> {
     await _bloc.stream
         .firstWhere((s) => s is! TasksLoaded || !s.isRefreshing)
         .timeout(const Duration(seconds: 30), onTimeout: () => _bloc.state);
+  }
+
+  Future<void> _openTask(int taskId) async {
+    await context.push(AppRouter.taskDetailPath(taskId));
+
+    if (!mounted) return;
+
+    _bloc.add(const TasksFetched());
   }
 
   int _columnCount(double width) {
@@ -167,7 +177,10 @@ class _TasksHomePageState extends State<TasksHomePage> {
 
                     final int taskIndex = index - 1;
 
-                    return TaskCard(task: state.tasks[taskIndex]);
+                    return TaskCard(
+                      task: state.tasks[taskIndex],
+                      onTap: () => _openTask(state.tasks[taskIndex].id),
+                    );
                   },
                 ),
               ),

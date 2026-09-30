@@ -26,6 +26,7 @@ import 'package:task_flow/core/theme/app_spacing.dart';
 import 'package:task_flow/core/theme/app_text_styles.dart';
 import 'package:task_flow/core/widgets/app_icon_button.dart';
 import 'package:task_flow/core/constants/app_strings.dart';
+import 'package:task_flow/core/widgets/logout_confirm_dialog.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_bloc.dart';
 import 'package:task_flow/features/auth/presentation/bloc/login_event.dart';
 
@@ -63,6 +64,13 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(64);
 
   Future<void> _onLogout(BuildContext context) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const LogoutConfirmDialog(),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
     await getIt<UserDetails>().clear();
 
     if (!context.mounted) return;
@@ -117,16 +125,21 @@ class TaskFlowAppBar extends StatelessWidget implements PreferredSizeWidget {
       surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
       titleSpacing: AppSpacing.lg,
-      leading: showBackButton
-          ? AppIconButton(
-              onPressed: onBackPressed,
-              icon: Icons.arrow_back_rounded,
-              tooltip: AppStrings.back,
-            )
-          : null,
-      title: Text(
-        title,
-        style: AppTextStyles.heading2.copyWith(fontSize: titleSize),
+      title: Row(
+        spacing: AppSpacing.sm,
+        children: [
+          showBackButton
+              ? AppIconButton(
+                  onPressed: onBackPressed,
+                  icon: Icons.arrow_back_ios_rounded,
+                  tooltip: AppStrings.back,
+                )
+              : const SizedBox.shrink(),
+          Text(
+            title,
+            style: AppTextStyles.heading2.copyWith(fontSize: titleSize),
+          ),
+        ],
       ),
       actions: [
         Padding(

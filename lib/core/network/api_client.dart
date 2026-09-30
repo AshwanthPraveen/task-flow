@@ -78,6 +78,24 @@ class ApiClient {
     }
   }
 
+  Future<Map<String, dynamic>> put(String path, {Object? data}) async {
+    try {
+      final Response<Map<String, dynamic>> response = await _dio
+          .put<Map<String, dynamic>>(path, data: data);
+      return response.data ?? <String, dynamic>{};
+    } on DioException catch (e) {
+      throw _mapError(e);
+    }
+  }
+
+  Future<void> delete(String path) async {
+    try {
+      await _dio.delete<dynamic>(path);
+    } on DioException catch (e) {
+      throw _mapError(e);
+    }
+  }
+
   ApiException _mapError(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:

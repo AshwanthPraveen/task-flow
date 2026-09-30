@@ -1,8 +1,10 @@
 // ============================================================================
+//
 // File: app_strings.dart
 // Created Date: 27-Sep-2026
 // Title: AppStrings
 // Description:
+//
 //   Defines all static strings used throughout the application.
 //
 // Class:
@@ -48,6 +50,7 @@ class AppStrings {
 
   static const String back = 'Back';
   static const String logout = 'Logout';
+  static const String logoutMessage = 'Are you sure you want to log out?';
 
   // --------------------------------------------------------------------------
   // Tasks
@@ -88,6 +91,14 @@ class AppStrings {
   static const String unknown = 'Unknown';
 
   // --------------------------------------------------------------------------
+  // Task Status Values
+  // --------------------------------------------------------------------------
+
+  static const String statusTodo = 'Todo';
+  static const String statusInProgress = 'In progress';
+  static const String statusCompleted = 'Completed';
+
+  // --------------------------------------------------------------------------
   // Relative Time
   // --------------------------------------------------------------------------
 
@@ -113,9 +124,10 @@ class AppStrings {
   static const String november = 'Nov';
   static const String december = 'Dec';
 
-  // ------------------------------------------------------
+  // --------------------------------------------------------------------------
   // Create Task
-  // ------------------------------------------------------
+  // --------------------------------------------------------------------------
+
   static const String createTask = 'Create Task';
   static const String taskTitle = 'Task title';
   static const String taskDescription = 'Task description';
@@ -123,4 +135,59 @@ class AppStrings {
   static const String close = 'Close';
   static const String taskCreated = 'Task created';
   static const String taskCreatedMessage = 'Your task was added successfully.';
+
+  // --------------------------------------------------------------------------
+  // Task Detail
+  // --------------------------------------------------------------------------
+
+  static const String taskDetail = 'Task Detail';
+  static const String taskKeyPrefix = 'TASK-';
+  static const String addDescription = 'Add a description...';
+
+  // --------------------------------------------------------------------------
+  // Task Details
+  // --------------------------------------------------------------------------
+
+  static const String details = 'Details';
+  static const String status = 'Status';
+  static const String createdBy = 'Created by';
+  static const String created = 'Created';
+  static const String lastUpdated = 'Last updated';
+  static const String task = 'Task';
+
+  // --------------------------------------------------------------------------
+  // Task Activity
+  // --------------------------------------------------------------------------
+
+  static const String activity = 'Activity';
+
+  // --------------------------------------------------------------------------
+  // Task Editing
+  // --------------------------------------------------------------------------
+
+  static const String save = 'Save';
+  static const String cancel = 'Cancel';
+  static const String you = 'You';
+  static const String userPrefix = 'User ';
+
+  // --------------------------------------------------------------------------
+  // Task Update
+  // --------------------------------------------------------------------------
+
+  static const String taskUpdated = 'Task updated';
+  static const String taskUpdatedMessage =
+      'Your task was updated successfully.';
+  static const String updateFailed = 'Update failed';
+
+  // --------------------------------------------------------------------------
+  // Task Delete
+  // --------------------------------------------------------------------------
+
+  static const String deleteTask = 'Delete task';
+  static const String deleteTaskMessage =
+      'Are you sure you want to delete this task? This action cannot be undone.';
+  static const String delete = 'Delete';
+  static const String taskDeleted = 'Task deleted';
+  static const String taskDeletedMessage =
+      'Your task was deleted successfully.';
 }
